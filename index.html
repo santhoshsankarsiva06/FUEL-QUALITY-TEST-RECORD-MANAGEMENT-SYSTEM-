@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FuelCheck</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: #f1f5f9;
+            color: #172033;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            background: #123b36;
+            color: white;
+            padding: 28px;
+        }
+
+        header h1 { margin: 0 0 8px; }
+
+        header p { margin: 0; color: #c6e6dd; }
+
+        main {
+            max-width: 1000px;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        .notice {
+            padding: 15px;
+            background: #fff5d6;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .card {
+            margin-top: 22px;
+            padding: 26px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px #00000008;
+        }
+
+        h2 { margin-top: 0; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        .full { grid-column: 1 / -1; }
+
+        button {
+            margin-top: 20px;
+            padding: 13px 22px;
+            border: none;
+            border-radius: 6px;
+            background: #16735d;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #message { line-height: 1.5; }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>FuelCheck</h1>
+        <p>Fuel Quality Test Record Management System</p>
+    </header>
+
+    <main>
+        <div class="notice">
+            Record results from an actual test or instrument.
+            This application does not detect water itself.
+        </div>
+
+        <section class="card">
+            <h2>Add Quality Test</h2>
+            <p>
+    <a href="/history" style="color: #16735d; font-weight: bold;">
+        View Reading History
+    </a>
+</p>
+
+            <form id="testForm">
+                <div class="grid">
+                    <label>
+                        Tank ID
+                        <input name="tank" placeholder="TANK-01"
+                               maxlength="50" required>
+                    </label>
+
+                    <label>
+                        Fuel Type
+                        <select name="fuel" required>
+                            <option value="">Select fuel</option>
+                            <option>Petrol E10</option>
+                            <option>Petrol E20</option>
+                            <option>Diesel</option>
+                            <option>Other</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Test Date and Time
+                        <input type="datetime-local" name="date" required>
+                    </label>
+
+                    <label>
+                        Tested By
+                        <input name="staff" placeholder="Staff name"
+                               maxlength="100" required>
+                    </label>
+
+                    <label>
+                        Test Method
+                        <input name="method"
+                               placeholder="Instrument measurement"
+                               maxlength="100" required>
+                    </label>
+
+                    <label>
+                        Test Parameter
+                        <input name="parameter"
+                               placeholder="Water content"
+                               maxlength="100" required>
+                    </label>
+
+                    <label>
+                        Measured Value
+                        <input type="number" name="value"
+                               step="any" min="0" required>
+                    </label>
+
+                    <label>
+                        Measurement Unit
+                        <select name="unit" required>
+                            <option value="">Select unit</option>
+                            <option>ppm</option>
+                            <option>% mass</option>
+                            <option>% volume</option>
+                            <option>mg/L</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Maximum Limit — Optional
+                        <input type="number" name="limit"
+                               step="any" min="0"
+                               placeholder="Same unit as measured value">
+                    </label>
+
+                    <label>
+                        Limit Reference — Optional
+                        <input name="reference"
+                               placeholder="Specification or demo reference"
+                               maxlength="200">
+                    </label>
+
+                    <label class="full">
+                        Notes
+                        <textarea name="notes" rows="3"
+                                  maxlength="2000"></textarea>
+                    </label>
+                </div>
+
+                <button type="submit">Save Test Record</button>
+                <p id="message" role="status"></p>
+            </form>
+        </section>
+    </main>
+
+    <script>
+    const form = document.getElementById("testForm");
+    const message = document.getElementById("message");
+    const button = form.querySelector('button[type="submit"]');
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        button.disabled = true;
+        message.textContent = "Saving...";
+
+        try {
+            const response = await fetch("/save", {
+                method: "POST",
+                body: new URLSearchParams(new FormData(form))
+            });
+
+            const result = await response.text();
+
+            message.textContent = result;
+            message.style.color = response.ok ? "#16735d" : "#b42318";
+
+            if (response.ok) {
+                form.reset();
+            }
+        } catch (error) {
+            message.style.color = "#b42318";
+            message.textContent =
+                "Cannot connect. Check that the Java server is running.";
+        } finally {
+            button.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
